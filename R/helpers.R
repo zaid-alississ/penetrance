@@ -186,7 +186,7 @@ transformDF <- function(df) {
 #' Validate Allele Frequency Input
 #'
 #' This function validates whether the provided input is a valid allele frequency.
-#' Allele frequencies must be numeric, scalar, and within the range [0, 1].
+#' Allele frequencies must be numeric, scalar, and within the range `[0, 1]`.
 #' The function also provides warnings for edge cases and common mistakes.
 #'
 #' @param allele_freq The allele frequency value to validate. Should be a numeric 

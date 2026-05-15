@@ -26,7 +26,7 @@ warnings), otherwise stops with an error message.
 }
 \description{
 This function validates whether the provided input is a valid allele frequency.
-Allele frequencies must be numeric, scalar, and within the range \link{0, 1}.
+Allele frequencies must be numeric, scalar, and within the range \verb{[0, 1]}.
 The function also provides warnings for edge cases and common mistakes.
 }
 \details{
