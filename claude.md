@@ -14,6 +14,8 @@ On `/compact`, update this file with all important context (bug statuses, decisi
 - Beta distribution requires both shape params > 0; `normalize==1` → `beta = at_risk - at_risk = 0` is invalid (Bug 7)
 - To extract a data frame column as a numeric vector: `as.numeric(df[[1]])` — matches `as.numeric(df[, "Male"])` pattern used in sex-specific branch
 - `claude.md` is the sole context store (`.claude/memory/` folder deleted as redundant)
+- Git repo initialized and connected to `https://github.com/zaid-alississ/penetrance`. Push requires `gh auth login` first (not yet completed). Never add "Co-Authored-By" or any Claude attribution to commit messages.
+- Bug 10 (`penetranceMain.R` default `var`) is deferred by user preference — do not fix unless asked.
 - `dweibull(0, alpha<1)=Inf` only fires when threshold is exactly an integer — confirmed with alpha=0.742407, beta=26.68247, threshold=33. Integer thresholds arise from `quantile()` on integer ages at MCMC initialization and persist through rejected proposals; can survive burn-in.
 - Bug 9 fix does two things: (1) multi-column error check (redundant with `helpers.R:441` for `penetrance()` path, but guards direct `mhChain` calls); (2) `as.numeric(baseline_data[[1]])` conversion (still needed — `helpers.R` validates but does not convert before passing to `mhChain`, so without it Bug 5 reappears).
 - Original unmodified CRAN files are in `penetrance_v0.1.3_ORIGINAL/` (renamed from `penetrance_v0.1.3_CRAN_release 2/`). Diff confirms all and only the documented changes are present.
@@ -62,16 +64,12 @@ if (is.null(var)) {
 | R1 | `mhChain.R:484–722` | ✅ DONE | Main MH loop written twice under sex_specific branch |
 | R2 | `mhChain.R:153–343` | ✅ DONE | Two near-identical `draw_initial_params` closures |
 | R3 | `mhLoglikehood.r:158–224,417–467` | ✅ DONE | `lik.fn` and `lik_noSex` share ~60% identical skeleton |
-| R4 | `outputHelpers.R:355–602` | 🔲 PENDING | `plot_penetrance` and `plot_pdf` differ only in `pweibull` vs `dweibull` |
+| R4 | `outputHelpers.R:355–602` | ✅ DONE | `plot_penetrance` and `plot_pdf` unified via `.plot_weibull_curve(type)` |
 | R7 | `penetranceMain.R:201–410` | 🔲 PENDING | Validation block repeats identical patterns for columns and integer params |
 
 ---
 
 ### Refactoring Details
-
-**R4** — `outputHelpers.R` `plot_penetrance()` and `plot_pdf()`, lines 355–602:
-Two ~120-line functions with identical structure (parameter extraction, `calculate_ylim` inner helper, sex-dispatch block, legend call). The only meaningful differences are the distribution function (`pweibull` vs `dweibull`) and y-axis label.
-- **Approach**: A single internal `.plot_weibull_curve(type = c("cdf", "pdf"), ...)` that selects the distribution function by `type`; both public functions become thin wrappers.
 
 **R7** — `penetranceMain.R` validation block, lines 201–410:
 Two identical patterns: (a) `CurAge` and `Age` column validation blocks are character-for-character identical except the column name; (b) the positive-integer check for `n_chains`, `n_iter_per_chain`, `ncores`, `thinning_factor` repeats the same 4-part condition 4 times.
