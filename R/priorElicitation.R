@@ -55,7 +55,7 @@ distribution_data_default <- data.frame(
 #' It is designed to aid in the statistical analysis of risk proportions in populations, particularly in the context of cancer research.
 #' The distributions are calculated for various statistical metrics such as asymptote, threshold, median, and first quartile.
 #'
-#' @param data A data frame containing age and risk data. If NULL or contains NA values, default parameters are used.
+#' @param data A data frame containing age and risk data. If NULL or entirely NA, default parameters are used. If provided, all entries in the age column must be numeric and non-NA.
 #' @param sample_size Numeric, the total sample size used for risk proportion calculations.
 #' @param ratio Numeric, the odds ratio (OR) or relative risk (RR) used in asymptote parameter calculations.
 #' @param prior_params List, containing prior parameters for the beta distributions. If NULL, default parameters are used.
