@@ -1,5 +1,45 @@
 # Penetrance Bug Review
 
+## Bug Status
+
+| # | File | Status | One-line summary |
+|---|------|--------|-----------------|
+| 1 | `outputHelpers.R:111` | ✅ FIXED | `generate_density_plots` non-sex branch used `_samples` instead of `_results` |
+| 3 | `outputHelpers.R:535,547` | ✅ FIXED | `dweibull(0, alpha<1)=Inf` breaks ylim and plot in `plot_pdf()` |
+| 4 | `outputHelpers.R:~467,~597` | ✅ FIXED | Legend color logic inverted in `plot_penetrance` and `plot_pdf` |
+| 5 | `mhChain.R:~270` | ✅ FIXED | `length(single_col_df)==1` not nrows; fixed as side effect of Bug 9 fix |
+| 8 | `priorElicitation.R:109` | ✅ FIXED | `makePriors()` accepts negative/invalid `prior_params` without validation |
+| 9 | `mhChain.R:267` | ✅ FIXED | Multi-col `baseline_data` silently uses first col when `sex_specific=FALSE` |
+
+---
+
+## Refactoring
+
+| # | File | Status | One-line summary |
+|---|------|--------|-----------------|
+| R1 | `mhChain.R:484–722` | ✅ DONE | Main MH loop written twice under sex_specific branch |
+| R2 | `mhChain.R:153–343` | ✅ DONE | Two near-identical `draw_initial_params` closures |
+| R3 | `mhLoglikehood.r:158–224,417–467` | ✅ DONE | `lik.fn` and `lik_noSex` share ~60% identical skeleton |
+| R4 | `outputHelpers.R:342–487` | ✅ DONE | `plot_penetrance` and `plot_pdf` unified via `plot_weibull_curve_internal(type)` |
+
+---
+
+## Documentation Issues
+
+| # | File | Status | One-line summary |
+|---|------|--------|-----------------|
+| D1 | `DESCRIPTION:27` | ✅ FIXED | DOI malformed: `<d 10.1093/bioadv/vbaf154>` → `<doi:10.1093/bioadv/vbaf154>` |
+| D3 | `outputHelpers.R:258` | ✅ FIXED | `@param burn_in` typo: "roportion" → "proportion" |
+| D4 | `penetranceMain.R:494` | ✅ FIXED | Inline comment typo: "appropriatesummary" → "appropriate summary" |
+| D5 | `README.md:21` | ✅ FIXED | Broken sentence: "involve a —an individual" (LaTeX `\textbf{proband}` rendered incorrectly from Rmd) |
+| D6 | `README.md:126–168` | ✅ FIXED | Raw Roxygen `#' @param` block pasted verbatim — should be prose, not R comment syntax |
+| D7 | `README.md:155` | ✅ FIXED | Three errors: `"PenEstim"` → `penetrance()`; `"probabilitie"` typo; `"as as input"` double word |
+| D8 | `README.md:159` | ✅ FIXED | `"PenEsim"` → `penetrance()` |
+| D9 | `README.md:161` | ✅ FIXED | `"arguement"` typo |
+| D11 | `priorElicitation.R:58` | ✅ FIXED | `@param data` claimed partial NAs fall back to defaults — actually causes a stop(); only NULL or all-NA uses defaults |
+
+---
+
 ## Compact Rule
 On `/compact`, update this file with all important context (bug statuses, decisions, key facts, new bugs) before compacting, so this file serves as the full context restore point for future sessions.
 
@@ -21,41 +61,9 @@ On `/compact`, update this file with all important context (bug statuses, decisi
 - Original unmodified CRAN files are in `penetrance_v0.1.3_ORIGINAL/` (renamed from `penetrance_v0.1.3_CRAN_release 2/`). Diff confirms all and only the documented changes are present.
 - To load local files for testing: `detach("package:penetrance", unload=TRUE)` if loaded, then `library(clipp); library(MASS); library(kinship2)`, then `source()` all R files. Check with `exists("init_one_group")`.
 - For `sex_specific=FALSE` testing: use `var=c(0.1,2,5,5)`, single-column baseline (`data.frame(risk=rowMeans(baseline_data_default[,c("Female","Male")]))`), and fix `simulated_families` parent IDs (`MotherID/FatherID == 0` → `NA`).
+- README.md has been manually edited and diverged from README.Rmd — README.md is more up-to-date. Edits should go directly in README.md; do not re-render from README.Rmd (would overwrite improvements).
+- `DESCRIPTION` URL correctly points to `bayesmendel/penetrance` (canonical upstream). Fork at `zaid-alississ/penetrance` is a working fork; changes will be upstreamed via PR.
 
----
-
-## Bug Status
-
-| # | File | Status | One-line summary |
-|---|------|--------|-----------------|
-| 1 | `outputHelpers.R:111` | ✅ FIXED | `generate_density_plots` non-sex branch used `_samples` instead of `_results` |
-| 3 | `outputHelpers.R:535,547` | ✅ FIXED | `dweibull(0, alpha<1)=Inf` breaks ylim and plot in `plot_pdf()` |
-| 4 | `outputHelpers.R:~467,~597` | ✅ FIXED | Legend color logic inverted in `plot_penetrance` and `plot_pdf` |
-| 5 | `mhChain.R:~270` | ✅ FIXED | `length(single_col_df)==1` not nrows; fixed as side effect of Bug 9 fix |
-| 8 | `priorElicitation.R:109` | ✅ FIXED | `makePriors()` accepts negative/invalid `prior_params` without validation |
-| 9 | `mhChain.R:267` | ✅ FIXED | Multi-col `baseline_data` silently uses first col when `sex_specific=FALSE` |
-
----
-
-## Refactoring
-
-### Status Table
-
-| # | File | Status | One-line summary |
-|---|------|--------|-----------------|
-| R1 | `mhChain.R:484–722` | ✅ DONE | Main MH loop written twice under sex_specific branch |
-| R2 | `mhChain.R:153–343` | ✅ DONE | Two near-identical `draw_initial_params` closures |
-| R3 | `mhLoglikehood.r:158–224,417–467` | ✅ DONE | `lik.fn` and `lik_noSex` share ~60% identical skeleton |
-| R4 | `outputHelpers.R:342–487` | ✅ DONE | `plot_penetrance` and `plot_pdf` unified via `plot_weibull_curve_internal(type)` |
-| R7 | `penetranceMain.R:201–410` | 🔲 PENDING | Validation block repeats identical patterns for columns and integer params |
-
----
-
-### Refactoring Details
-
-**R7** — `penetranceMain.R` validation block, lines 201–410:
-Two identical patterns: (a) `CurAge` and `Age` column validation blocks are character-for-character identical except the column name; (b) the positive-integer check for `n_chains`, `n_iter_per_chain`, `ncores`, `thinning_factor` repeats the same 4-part condition 4 times.
-- **Approach**: A `validate_age_column(df, col_name)` helper called twice; an `is_positive_integer(x)` helper used in a loop over the four numeric params.
 
 ---
 
@@ -101,3 +109,6 @@ Two identical patterns: (a) `CurAge` and `Age` column validation blocks are char
 - **Bug 7 (`priorElicitation.R` Beta params)**: `ratio = NULL` with real `distribution_data` is not a valid combination in practice — `ratio` is required to anchor the asymptote prior, and the default `distribution_data_default` has all NAs so `compute_parameters_asymptote` is never reached in normal usage.
 - **Bug 6 (`mhLoglikehood.r:220,464`)**: `geno[i]=="1/1"` crashes on NA — dismissed because `helpers.R:172` converts all NA genotypes to `""` before data reaches the likelihood function. `"" == "1/1"` returns FALSE safely.
 - **Bug 10 (`mhChain.R` rejected proposals)**: `log_acceptance_ratio`, `loglikelihood_proposal`, `logprior_proposal` store 0 instead of NA on rejection. These fields are diagnostic-only and never consumed by the package's inference or plotting functions — no fix needed.
+- **R7 (`penetranceMain.R` validation block)**: Repeated patterns for column and integer param validation — dismissed by user preference.
+- **D2 (`DESCRIPTION` URL)**: Points to `bayesmendel/penetrance` — correct, that is the canonical upstream repo. Fork at `zaid-alississ/penetrance` is a working fork; changes will be upstreamed via PR.
+- **D10 (`README.md` installation URLs)**: README.md already has correct `bayesmendel/penetrance` URLs. `nicokubi` references exist only in README.Rmd which is not being edited — not an issue.
