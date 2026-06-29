@@ -14,7 +14,7 @@ On `/compact`, update this file with all important context (bug statuses, decisi
 - Beta distribution requires both shape params > 0; `normalize==1` → `beta = at_risk - at_risk = 0` is invalid (Bug 7)
 - To extract a data frame column as a numeric vector: `as.numeric(df[[1]])` — matches `as.numeric(df[, "Male"])` pattern used in sex-specific branch
 - `claude.md` is the sole context store (`.claude/memory/` folder deleted as redundant)
-- Git repo initialized and connected to `https://github.com/zaid-alississ/penetrance`. Push requires `gh auth login` first (not yet completed). Never add "Co-Authored-By" or any Claude attribution to commit messages.
+- Git repo connected to `https://github.com/zaid-alississ/penetrance`. All work goes on `main`. Git global email: `zaid.alississ@gmail.com`. Never add "Co-Authored-By" or any Claude attribution to commit messages. Do not use dot-prefix (`.fnName`) naming convention — not used elsewhere in codebase; use `_internal` suffix instead.
 - Bug 10 (`penetranceMain.R` default `var`) is deferred by user preference — do not fix unless asked.
 - `dweibull(0, alpha<1)=Inf` only fires when threshold is exactly an integer — confirmed with alpha=0.742407, beta=26.68247, threshold=33. Integer thresholds arise from `quantile()` on integer ages at MCMC initialization and persist through rejected proposals; can survive burn-in.
 - Bug 9 fix does two things: (1) multi-column error check (redundant with `helpers.R:441` for `penetrance()` path, but guards direct `mhChain` calls); (2) `as.numeric(baseline_data[[1]])` conversion (still needed — `helpers.R` validates but does not convert before passing to `mhChain`, so without it Bug 5 reappears).
@@ -32,26 +32,8 @@ On `/compact`, update this file with all important context (bug statuses, decisi
 | 3 | `outputHelpers.R:535,547` | ✅ FIXED | `dweibull(0, alpha<1)=Inf` breaks ylim and plot in `plot_pdf()` |
 | 4 | `outputHelpers.R:~467,~597` | ✅ FIXED | Legend color logic inverted in `plot_penetrance` and `plot_pdf` |
 | 5 | `mhChain.R:~270` | ✅ FIXED | `length(single_col_df)==1` not nrows; fixed as side effect of Bug 9 fix |
-| 7 | `priorElicitation.R:88–107` | ❌ DISMISSED | `normalize==1` → `beta=0` invalid Beta param in all 3 `compute_parameters_*` fns |
 | 8 | `priorElicitation.R:109` | ✅ FIXED | `makePriors()` accepts negative/invalid `prior_params` without validation |
 | 9 | `mhChain.R:267` | ✅ FIXED | Multi-col `baseline_data` silently uses first col when `sex_specific=FALSE` |
-| 10 | `penetranceMain.R:180` | 🔲 PENDING | Default `var` is length-8 (sex-specific), always errors when `sex_specific=FALSE` without explicit `var` |
-
----
-
-## Pending Fix Details
-
-**Bug 10** — `penetranceMain.R` line 180: default `var = c(0.1, 0.1, 2, 2, 5, 5, 5, 5)` is length-8, always fails validation when `sex_specific=FALSE` without explicit `var`.
-```r
-# Change default in function signature from:
-var = c(0.1, 0.1, 2, 2, 5, 5, 5, 5),
-# to:
-var = NULL,
-# Then add before the existing var validation (~line 268):
-if (is.null(var)) {
-  var <- if (sex_specific) c(0.1, 0.1, 2, 2, 5, 5, 5, 5) else c(0.1, 2, 5, 5)
-}
-```
 
 ---
 
@@ -64,7 +46,7 @@ if (is.null(var)) {
 | R1 | `mhChain.R:484–722` | ✅ DONE | Main MH loop written twice under sex_specific branch |
 | R2 | `mhChain.R:153–343` | ✅ DONE | Two near-identical `draw_initial_params` closures |
 | R3 | `mhLoglikehood.r:158–224,417–467` | ✅ DONE | `lik.fn` and `lik_noSex` share ~60% identical skeleton |
-| R4 | `outputHelpers.R:355–602` | ✅ DONE | `plot_penetrance` and `plot_pdf` unified via `.plot_weibull_curve(type)` |
+| R4 | `outputHelpers.R:342–487` | ✅ DONE | `plot_penetrance` and `plot_pdf` unified via `plot_weibull_curve_internal(type)` |
 | R7 | `penetranceMain.R:201–410` | 🔲 PENDING | Validation block repeats identical patterns for columns and integer params |
 
 ---
