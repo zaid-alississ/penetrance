@@ -44,6 +44,13 @@ table.**
   used in sex-specific branch
 - `claude.md` is the sole context store (`.claude/memory/` folder
   deleted as redundant)
+- Git repo connected to `https://github.com/zaid-alississ/penetrance`.
+  All work goes on `main`. Git global email: `zaid.alississ@gmail.com`.
+  Never add “Co-Authored-By” or any Claude attribution to commit
+  messages. Do not use dot-prefix (`.fnName`) naming convention — not
+  used elsewhere in codebase; use `_internal` suffix instead.
+- Bug 10 (`penetranceMain.R` default `var`) is deferred by user
+  preference — do not fix unless asked.
 - `dweibull(0, alpha<1)=Inf` only fires when threshold is exactly an
   integer — confirmed with alpha=0.742407, beta=26.68247, threshold=33.
   Integer thresholds arise from
@@ -81,29 +88,8 @@ table.**
 | 3 | `outputHelpers.R:535,547` | ✅ FIXED | `dweibull(0, alpha<1)=Inf` breaks ylim and plot in [`plot_pdf()`](https://nicokubi.github.io/penetrance/reference/plot_pdf.md) |
 | 4 | `outputHelpers.R:~467,~597` | ✅ FIXED | Legend color logic inverted in `plot_penetrance` and `plot_pdf` |
 | 5 | `mhChain.R:~270` | ✅ FIXED | `length(single_col_df)==1` not nrows; fixed as side effect of Bug 9 fix |
-| 7 | `priorElicitation.R:88–107` | ❌ DISMISSED | `normalize==1` → `beta=0` invalid Beta param in all 3 `compute_parameters_*` fns |
 | 8 | `priorElicitation.R:109` | ✅ FIXED | [`makePriors()`](https://nicokubi.github.io/penetrance/reference/makePriors.md) accepts negative/invalid `prior_params` without validation |
 | 9 | `mhChain.R:267` | ✅ FIXED | Multi-col `baseline_data` silently uses first col when `sex_specific=FALSE` |
-| 10 | `penetranceMain.R:180` | 🔲 PENDING | Default `var` is length-8 (sex-specific), always errors when `sex_specific=FALSE` without explicit `var` |
-
-------------------------------------------------------------------------
-
-## Pending Fix Details
-
-**Bug 10** — `penetranceMain.R` line 180: default
-`var = c(0.1, 0.1, 2, 2, 5, 5, 5, 5)` is length-8, always fails
-validation when `sex_specific=FALSE` without explicit `var`.
-
-``` r
-# Change default in function signature from:
-var = c(0.1, 0.1, 2, 2, 5, 5, 5, 5),
-# to:
-var = NULL,
-# Then add before the existing var validation (~line 268):
-if (is.null(var)) {
-  var <- if (sex_specific) c(0.1, 0.1, 2, 2, 5, 5, 5, 5) else c(0.1, 2, 5, 5)
-}
-```
 
 ------------------------------------------------------------------------
 
@@ -116,25 +102,12 @@ if (is.null(var)) {
 | R1 | `mhChain.R:484–722` | ✅ DONE | Main MH loop written twice under sex_specific branch |
 | R2 | `mhChain.R:153–343` | ✅ DONE | Two near-identical `draw_initial_params` closures |
 | R3 | `mhLoglikehood.r:158–224,417–467` | ✅ DONE | `lik.fn` and `lik_noSex` share ~60% identical skeleton |
-| R4 | `outputHelpers.R:355–602` | 🔲 PENDING | `plot_penetrance` and `plot_pdf` differ only in `pweibull` vs `dweibull` |
+| R4 | `outputHelpers.R:342–487` | ✅ DONE | `plot_penetrance` and `plot_pdf` unified via `plot_weibull_curve_internal(type)` |
 | R7 | `penetranceMain.R:201–410` | 🔲 PENDING | Validation block repeats identical patterns for columns and integer params |
 
 ------------------------------------------------------------------------
 
 ### Refactoring Details
-
-**R4** — `outputHelpers.R`
-[`plot_penetrance()`](https://nicokubi.github.io/penetrance/reference/plot_penetrance.md)
-and
-[`plot_pdf()`](https://nicokubi.github.io/penetrance/reference/plot_pdf.md),
-lines 355–602: Two ~120-line functions with identical structure
-(parameter extraction, `calculate_ylim` inner helper, sex-dispatch
-block, legend call). The only meaningful differences are the
-distribution function (`pweibull` vs `dweibull`) and y-axis label. -
-**Approach**: A single internal
-`.plot_weibull_curve(type = c("cdf", "pdf"), ...)` that selects the
-distribution function by `type`; both public functions become thin
-wrappers.
 
 **R7** — `penetranceMain.R` validation block, lines 201–410: Two
 identical patterns: (a) `CurAge` and `Age` column validation blocks are
