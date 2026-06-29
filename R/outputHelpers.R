@@ -255,7 +255,7 @@ printRejectionRates <- function(results, verbose = TRUE) {
 #' Apply Burn-In
 #'
 #' @param results A list of MCMC chain results.
-#' @param burn_in The fraction roportion of results to discard as burn-in (0 to 1). The default is no burn-in, burn_in=0.
+#' @param burn_in The fraction or proportion of results to discard as burn-in (0 to 1). The default is no burn-in, burn_in=0.
 #'
 #' @return A list of results with burn-in applied.
 #'
